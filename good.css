@@ -3,7 +3,20 @@
    Hand-authored replacement for the Tailwind build. All rules are scoped
    under .agx-* so the widget can be dropped into any host page.
    ========================================================================= */
+body{
+    margin:0;
+    font-family:Arial;
+}
 
+.hero{
+    height:100vh;
+    background:linear-gradient(135deg,#02131f,#06384a,#0ba5a4);
+}
+
+.content{
+    height:100vh;
+    background:white;
+}
 .agx-root,
 .agx-root *,
 .agx-root *::before,
@@ -11,6 +24,7 @@
   box-sizing: border-box;
 }
 
+:root,
 .agx-root {
   --agx-white: #ffffff;
   --agx-slate-950: #020617;
@@ -37,6 +51,17 @@
   --agx-red-400: #f87171;
   --agx-red-500: #ef4444;
 
+  /* Launcher pill — solid black. For a softer look try #1e293b (slate-800)
+     or #334155 (slate-700). */
+  --agx-launcher-bg: #000000;
+  --agx-launcher-bg-hover: #1a1a1a;
+
+  /* Expanded panel insets. --agx-top-offset clears the host site's navbar:
+     raise it if your header is taller, lower it if the panel sits too low. */
+  --agx-top-offset: 96px;
+  --agx-side-inset: 4vw;
+  --agx-bottom-inset: 3vh;
+
   --agx-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, .1), 0 2px 4px -2px rgba(0, 0, 0, .1);
   --agx-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
 
@@ -46,21 +71,22 @@
   -webkit-font-smoothing: antialiased;
 }
 
-.agx-root button,
-.agx-root input {
+/* Zero-specificity reset: :where() keeps these from beating component rules
+   below, while still neutralising the host page's own button styling. */
+:where(.agx-root button, .agx-root input) {
   font: inherit;
   color: inherit;
   margin: 0;
 }
 
-.agx-root button {
+:where(.agx-root button) {
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
 }
 
-.agx-root svg {
+:where(.agx-root svg) {
   display: block;
 }
 
@@ -122,31 +148,44 @@
   z-index: 9998;
   display: flex;
   align-items: center;
-  gap: .625rem;
-  padding: .5rem 1.25rem .5rem .5rem;
+  gap: .75rem;
+  padding: .5rem 1.625rem .5rem .5rem;
   border-radius: 9999px;
-  background: rgba(2, 6, 23, .55);
+  background: var(--agx-launcher-bg, #000000);
   border: 1px solid rgba(255, 255, 255, .2);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
   box-shadow: 0 10px 40px -10px rgba(13, 148, 136, .6);
+  max-width: calc(100vw - 3rem);
+  white-space: nowrap;
+  overflow: hidden;
   transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease;
 }
 
 .agx-launcher:hover {
+  background: var(--agx-launcher-bg-hover, #1a1a1a);
   box-shadow: 0 15px 50px -10px rgba(13, 148, 136, .8);
   transform: translateY(-.125rem);
 }
 
 .agx-launcher[hidden] { display: none; }
 
+/* Host pages sometimes ship aggressive `button` styling. The ID selector
+   (1,1,0) outranks anything a site is realistically going to have. */
+#agilisium-chat-widget .agx-launcher {
+  background: var(--agx-launcher-bg, #000000);
+  color: #fff;
+}
+
+#agilisium-chat-widget .agx-launcher:hover {
+  background: var(--agx-launcher-bg-hover, #1a1a1a);
+}
+
 .agx-launcher-orb {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3.125rem;
+  height: 3.125rem;
   border-radius: 9999px;
   background-image: linear-gradient(to bottom right, var(--agx-teal-400), var(--agx-emerald-600));
   box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, .05);
@@ -163,15 +202,19 @@
 
 .agx-launcher-icon {
   position: relative;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .agx-launcher-label {
-  font-size: .875rem;
+  font-size: .9375rem;
   font-weight: 600;
+  line-height: 1.2;
   color: #fff;
+  flex-shrink: 0;
+  white-space: nowrap;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .1)) drop-shadow(0 1px 1px rgba(0, 0, 0, .06));
 }
 
@@ -194,9 +237,9 @@
 .agx-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2, 6, 23, .6);
-  -webkit-backdrop-filter: blur(40px);
-  backdrop-filter: blur(40px);
+  /* Transparent: the host page stays sharp and unblurred behind the widget.
+     Still click-to-close. Set a background here if you want dimming back. */
+  background: transparent;
   transition: opacity .3s ease;
   opacity: 0;
   pointer-events: none;
@@ -213,9 +256,7 @@
   position: absolute;
   display: flex;
   overflow: hidden;
-  background: rgba(255, 255, 255, .95);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: #ffffff;
   border: 1px solid var(--agx-slate-200);
   border-radius: 24px;
   box-shadow: 0 30px 90px -20px rgba(15, 23, 42, .35);
@@ -224,10 +265,10 @@
 /* expanded */
 .agx-panel.agx-expanded {
   transition: all .3s ease;
-  top: 5vh;
-  left: 5vw;
-  right: 5vw;
-  bottom: 5vh;
+  top: var(--agx-top-offset, 96px);
+  left: var(--agx-side-inset, 4vw);
+  right: var(--agx-side-inset, 4vw);
+  bottom: var(--agx-bottom-inset, 3vh);
   flex-direction: row;
 }
 
@@ -515,9 +556,7 @@
 
 .agx-chat {
   position: relative;
-  background: rgba(255, 255, 255, .7);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--agx-slate-50, #f8fafc);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -666,6 +705,8 @@
   min-height: 0;
   min-width: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem 1.25rem;
 }
 
@@ -959,3 +1000,21 @@
 /* --------------------------------------------------------------- utilities */
 
 .agx-hidden { display: none !important; }
+
+/* --------------------------------------------------------- small screens */
+
+@media (max-width: 767px) {
+  .agx-root {
+    --agx-top-offset: 64px;
+    --agx-side-inset: 3vw;
+    --agx-bottom-inset: 2vh;
+  }
+
+  .agx-launcher {
+    bottom: 1rem;
+    right: 1rem;
+    padding-right: 1.25rem;
+  }
+
+  .agx-launcher-label { font-size: .875rem; }
+}
