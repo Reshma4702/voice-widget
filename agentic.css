@@ -1,0 +1,1115 @@
+/* =========================================================================
+   Agilisium Voice Chat Widget — vanilla CSS
+   Hand-authored replacement for the Tailwind build. All rules are scoped
+   under .agx-* so the widget can be dropped into any host page.
+   ========================================================================= */
+
+.agx-root,
+.agx-root *,
+.agx-root *::before,
+.agx-root *::after {
+  box-sizing: border-box;
+}
+
+:root,
+.agx-root {
+  --agx-white: #ffffff;
+  --agx-slate-950: #020617;
+  --agx-slate-900: #0f172a;
+  --agx-slate-700: #334155;
+  --agx-slate-600: #475569;
+  --agx-slate-500: #64748b;
+  --agx-slate-400: #94a3b8;
+  --agx-slate-300: #cbd5e1;
+  --agx-slate-200: #e2e8f0;
+  --agx-slate-100: #f1f5f9;
+  --agx-slate-50: #f8fafc;
+
+  --agx-teal-400: #2dd4bf;
+  --agx-teal-500: #14b8a6;
+  --agx-teal-600: #0d9488;
+  --agx-cyan-500: #06b6d4;
+  --agx-emerald-200: #a7f3d0;
+  --agx-emerald-400: #34d399;
+  --agx-emerald-600: #059669;
+  --agx-amber-200: #fde68a;
+  --agx-amber-400: #fbbf24;
+  --agx-red-200: #fecaca;
+  --agx-red-400: #f87171;
+  --agx-red-500: #ef4444;
+
+  /* Launcher pill — solid black. For a softer look try #1e293b (slate-800)
+     or #334155 (slate-700). */
+  --agx-launcher-bg: #000000;
+  --agx-launcher-bg-hover: #1a1a1a;
+
+  /* Expanded panel insets. --agx-top-offset clears the host site's navbar:
+     raise it if your header is taller, lower it if the panel sits too low. */
+  --agx-top-offset: 96px;
+  --agx-side-inset: 4vw;
+  --agx-bottom-inset: 3vh;
+
+  --agx-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, .1), 0 2px 4px -2px rgba(0, 0, 0, .1);
+  --agx-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
+
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Zero-specificity reset: :where() keeps these from beating component rules
+   below, while still neutralising the host page's own button styling. */
+:where(.agx-root button, .agx-root input) {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+:where(.agx-root button) {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:where(.agx-root svg) {
+  display: block;
+}
+
+/* ---------------------------------------------------------------- keyframes */
+
+@keyframes agx-breathe {
+  0%, 100% { transform: scale(1);    opacity: .85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes agx-glow {
+  0%, 100% { transform: scale(1);    opacity: .9; filter: blur(20px); }
+  50%      { transform: scale(1.15); opacity: 1;  filter: blur(30px); }
+}
+
+@keyframes agx-wave {
+  0%, 100% { transform: scale(1);    opacity: .9; }
+  25%      { transform: scale(1.08); opacity: 1; }
+  75%      { transform: scale(.96);  opacity: .85; }
+}
+
+@keyframes agx-ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes agx-pulse {
+  50% { opacity: .5; }
+}
+
+@keyframes agx-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes agx-bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, .2, 1);
+  }
+}
+
+.agx-anim-breathe { animation: agx-breathe 4s   ease-in-out infinite; }
+.agx-anim-glow    { animation: agx-glow    1.6s ease-in-out infinite; }
+.agx-anim-wave    { animation: agx-wave    1.2s ease-in-out infinite; }
+.agx-anim-ping    { animation: agx-ping    1s   cubic-bezier(0, 0, .2, 1) infinite; }
+.agx-anim-pulse   { animation: agx-pulse   2s   cubic-bezier(.4, 0, .6, 1) infinite; }
+.agx-anim-spin    { animation: agx-spin    1s   linear infinite; }
+.agx-anim-bounce  { animation: agx-bounce  1s   infinite; }
+
+/* ----------------------------------------------------------------- launcher */
+
+.agx-launcher {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem 1.625rem .5rem .5rem;
+  border-radius: 9999px;
+  background: var(--agx-launcher-bg, #000000);
+  border: 1px solid rgba(255, 255, 255, .2);
+  box-shadow: 0 10px 40px -10px rgba(13, 148, 136, .6);
+  max-width: calc(100vw - 3rem);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease;
+}
+
+.agx-launcher:hover {
+  background: var(--agx-launcher-bg-hover, #1a1a1a);
+  box-shadow: 0 15px 50px -10px rgba(13, 148, 136, .8);
+  transform: translateY(-.125rem);
+}
+
+.agx-launcher[hidden] { display: none; }
+
+/* Host pages sometimes ship aggressive `button` styling. The ID selector
+   (1,1,0) outranks anything a site is realistically going to have. */
+#agilisium-chat-widget .agx-launcher {
+  background: var(--agx-launcher-bg, #000000);
+  color: #fff;
+}
+
+#agilisium-chat-widget .agx-launcher:hover {
+  background: var(--agx-launcher-bg-hover, #1a1a1a);
+}
+
+.agx-launcher-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.125rem;
+  height: 3.125rem;
+  border-radius: 9999px;
+  background-image: linear-gradient(to bottom right, var(--agx-teal-400), var(--agx-emerald-600));
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, .05);
+  flex-shrink: 0;
+}
+
+.agx-launcher-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--agx-teal-400);
+  opacity: .7;
+}
+
+.agx-launcher-icon {
+  position: relative;
+  width: 1.375rem;
+  height: 1.375rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.agx-launcher-label {
+  font-size: .9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  flex-shrink: 0;
+  white-space: nowrap;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .1)) drop-shadow(0 1px 1px rgba(0, 0, 0, .06));
+}
+
+/* ------------------------------------------------------------------ overlay */
+
+.agx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  transition: opacity .28s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agx-overlay.agx-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.agx-backdrop {
+  position: absolute;
+  inset: 0;
+  /* Dims and blurs the host page behind the widget so nothing but the
+     chatbot is usable while it's open. Also doubles as the
+     click-outside-to-close target. */
+  background: rgba(15, 23, 42, .45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: opacity .28s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agx-backdrop.agx-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* -------------------------------------------------------------------- panel */
+
+.agx-panel {
+  position: absolute;
+  display: flex;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--agx-slate-200);
+  border-radius: 24px;
+  box-shadow: 0 30px 90px -20px rgba(15, 23, 42, .35);
+}
+
+/* expanded — full-bleed panel, inset from the viewport edges (unchanged
+   footprint from before; only the internal voice/chat split changed). */
+.agx-panel.agx-expanded {
+  top: var(--agx-top-offset, 96px);
+  left: var(--agx-side-inset, 4vw);
+  right: var(--agx-side-inset, 4vw);
+  bottom: var(--agx-bottom-inset, 3vh);
+  flex-direction: row;
+  transform: scale(.97);
+  opacity: 0;
+  transition: transform .28s ease, opacity .28s ease;
+}
+
+.agx-overlay.agx-open .agx-panel.agx-expanded {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.agx-panel.agx-expanded.agx-stacked {
+  flex-direction: column;
+}
+
+/* docked */
+.agx-panel.agx-docked {
+  flex-direction: column;
+  border-radius: 20px;
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------- brand tag */
+
+.agx-brand {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  pointer-events: none;
+  min-width: 0;
+  max-width: 55%;
+  top: .75rem;
+  left: 1rem;
+}
+
+.agx-docked .agx-brand {
+  gap: .25rem;
+  top: .5rem;
+  left: .625rem;
+}
+
+.agx-brand-icon {
+  flex-shrink: 0;
+  color: var(--agx-teal-500);
+  width: .875rem;
+  height: .875rem;
+}
+
+.agx-docked .agx-brand-icon {
+  width: .75rem;
+  height: .75rem;
+}
+
+.agx-brand-text {
+  font-weight: 500;
+  color: var(--agx-slate-500);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agx-docked .agx-brand-text { font-size: 9.5px; }
+
+.agx-brand-text b {
+  color: var(--agx-slate-700);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------- window controls */
+
+.agx-window-controls {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+}
+
+.agx-iconbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--agx-slate-100);
+  color: var(--agx-slate-700);
+  transition: background-color .15s ease, color .15s ease;
+  flex-shrink: 0;
+}
+
+.agx-iconbtn:hover { background: var(--agx-slate-200); }
+
+.agx-iconbtn-sm { width: 1.75rem; height: 1.75rem; }
+.agx-iconbtn-lg { width: 2.25rem; height: 2.25rem; }
+
+/* ----------------------------------------------------------------- orb pane */
+
+.agx-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  background: #fff;
+  overflow: hidden;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  flex: 1 1 0%;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  justify-content: space-between;
+}
+
+.agx-docked .agx-stage {
+  flex: 0 1 auto;
+  padding: 1rem .75rem .75rem;
+  gap: .5rem;
+  justify-content: flex-start;
+}
+
+/* Left panel: fixed at 30% of the modal, never grows past it, never scrolls. */
+.agx-panel.agx-expanded:not(.agx-stacked) .agx-stage {
+  flex: 0 0 30%;
+  width: 30%;
+  max-width: 30%;
+}
+
+/* Stacked (mobile): voice controls collapse to their natural height so the
+   chat below keeps the primary focus. */
+.agx-panel.agx-expanded.agx-stacked .agx-stage {
+  flex: 0 0 auto;
+  max-height: 38%;
+}
+
+.agx-stage-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0%;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 0;
+}
+
+.agx-docked .agx-stage-inner {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  gap: .75rem;
+}
+
+/* ---------------------------------------------------------------------- orb */
+
+.agx-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agx-orb-glow {
+  position: absolute;
+  border-radius: 9999px;
+  transition: all .5s ease;
+  background: radial-gradient(circle,
+      rgba(13, 148, 136, .35) 0%,
+      rgba(20, 184, 166, .15) 40%,
+      transparent 70%);
+  filter: blur(20px);
+}
+
+.agx-orb-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 212, 191, .4);
+  transition: width 120ms ease-out, height 120ms ease-out;
+}
+
+.agx-orb-core {
+  position: relative;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: linear-gradient(to bottom right,
+      var(--agx-teal-400), var(--agx-cyan-500), var(--agx-emerald-600));
+  transition: box-shadow 120ms ease-out;
+}
+
+.agx-orb-sheen {
+  position: absolute;
+  inset: .75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, .1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, .3);
+}
+
+.agx-orb-icon {
+  position: relative;
+  color: #fff;
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, .04)) drop-shadow(0 4px 3px rgba(0, 0, 0, .1));
+}
+
+/* -------------------------------------------------------------- status text */
+
+.agx-status { text-align: center; }
+
+.agx-status-title {
+  color: var(--agx-slate-900);
+  font-weight: 500;
+  font-size: 1.125rem;
+}
+
+.agx-docked .agx-status-title { font-size: 13px; }
+
+.agx-status-sub {
+  color: var(--agx-slate-500);
+  margin-top: .25rem;
+  font-size: .75rem;
+}
+
+.agx-docked .agx-status-sub { font-size: 10.5px; }
+
+/* --------------------------------------------------------------- action row */
+
+.agx-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-shrink: 0;
+  min-width: 0;
+  gap: .625rem;
+  flex-wrap: nowrap;
+}
+
+.agx-docked .agx-actions {
+  gap: .375rem;
+  margin-top: .5rem;
+  flex-wrap: wrap;
+}
+
+.agx-contact {
+  border-radius: 9999px;
+  background: var(--agx-teal-500);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color .15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: .5rem 1rem;
+  font-size: .875rem;
+}
+
+.agx-contact:hover { background: var(--agx-teal-600); }
+
+.agx-docked .agx-contact {
+  padding: .375rem .75rem;
+  font-size: .75rem;
+}
+
+.agx-action-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: .625rem;
+}
+
+.agx-docked .agx-action-group { gap: .375rem; }
+
+.agx-pillbtn {
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s ease;
+  box-shadow: var(--agx-shadow-md);
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid var(--agx-slate-200);
+  color: var(--agx-slate-700);
+  width: 2rem;
+  height: 2rem;
+}
+
+.agx-pillbtn:hover { background: var(--agx-slate-100); }
+
+.agx-docked .agx-pillbtn-mic { width: 1.75rem; height: 1.75rem; }
+
+.agx-pillbtn-end {
+  background: var(--agx-red-500);
+  border-color: var(--agx-red-500);
+  color: #fff;
+  box-shadow: var(--agx-shadow-lg);
+}
+
+.agx-pillbtn-end:hover { background: var(--agx-red-400); }
+
+/* ---------------------------------------------------------------- chat pane */
+
+.agx-chat {
+  position: relative;
+  background: var(--agx-slate-50, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+  width: 420px;
+  border-left: 1px solid var(--agx-slate-200);
+}
+
+/* Right panel: fixed at 70% of the modal — chat is the primary focus. */
+.agx-panel.agx-expanded:not(.agx-stacked) .agx-chat {
+  flex: 0 0 70%;
+  width: 70%;
+  max-width: 70%;
+}
+
+.agx-panel.agx-stacked .agx-chat {
+  width: auto;
+  flex: 1 1 0%;
+  min-height: 0;
+  border-left: 0;
+  border-top: 1px solid var(--agx-slate-200);
+}
+
+.agx-panel.agx-docked .agx-chat {
+  width: auto;
+  flex: 1 1 0%;
+  border-left: 0;
+  overflow: hidden;
+}
+
+.agx-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--agx-slate-200);
+}
+
+.agx-docked .agx-chat-header {
+  padding: .625rem .75rem;
+  border-bottom: 0;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.agx-chat-title-wrap { min-width: 0; }
+
+.agx-chat-title {
+  color: var(--agx-slate-900);
+  font-weight: 600;
+  font-size: 1.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agx-chat-subtitle {
+  color: var(--agx-slate-500);
+  font-size: .75rem;
+  margin-top: .125rem;
+}
+
+.agx-chat-header-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: .5rem;
+}
+
+.agx-docked .agx-chat-header-actions { gap: .25rem; }
+
+/* -------------------------------------------------------- connection status */
+
+.agx-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  padding: .25rem .625rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .15);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.agx-conn-dotwrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agx-conn-dot,
+.agx-conn-ping {
+  width: .375rem;
+  height: .375rem;
+  border-radius: 9999px;
+}
+
+.agx-conn-ping {
+  position: absolute;
+  inset: 0;
+  opacity: .6;
+}
+
+.agx-conn-icon { width: .75rem; height: .75rem; }
+
+.agx-conn-retry {
+  margin-left: .25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .125rem;
+  color: rgba(255, 255, 255, .8);
+}
+
+.agx-conn-retry:hover { color: #fff; }
+
+/* connection status variants */
+.agx-conn-idle         { color: rgba(255, 255, 255, .7); }
+.agx-conn-idle .agx-conn-dot,
+.agx-conn-idle .agx-conn-ping { background: rgba(255, 255, 255, .4); }
+
+.agx-conn-checking,
+.agx-conn-reconnecting { color: var(--agx-amber-200); }
+.agx-conn-checking .agx-conn-dot,
+.agx-conn-checking .agx-conn-ping,
+.agx-conn-reconnecting .agx-conn-dot,
+.agx-conn-reconnecting .agx-conn-ping { background: var(--agx-amber-400); }
+
+.agx-conn-connected    { color: var(--agx-emerald-200); }
+.agx-conn-connected .agx-conn-dot,
+.agx-conn-connected .agx-conn-ping { background: var(--agx-emerald-400); }
+
+.agx-conn-offline,
+.agx-conn-denied,
+.agx-conn-unavailable  { color: var(--agx-red-200); }
+.agx-conn-offline .agx-conn-dot,
+.agx-conn-offline .agx-conn-ping,
+.agx-conn-denied .agx-conn-dot,
+.agx-conn-denied .agx-conn-ping,
+.agx-conn-unavailable .agx-conn-dot,
+.agx-conn-unavailable .agx-conn-ping { background: var(--agx-red-400); }
+
+/* ----------------------------------------------------------------- messages */
+
+.agx-messages {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* The docked panel is draggable, which previously meant touch-action:none on
+     the whole panel — that silently disabled wheel/touch scrolling in here and
+     left the scrollbar as the only way to move. Dragging now lives on the
+     header and resize handles only, and the history owns vertical panning. */
+  touch-action: pan-y;
+  padding: 1rem 1.25rem;
+}
+
+.agx-docked .agx-messages { padding: .5rem .75rem; }
+
+.agx-messages > * + * { margin-top: .75rem; }
+
+.agx-empty {
+  color: var(--agx-slate-600);
+  font-size: .875rem;
+}
+
+.agx-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.agx-msg.agx-msg-user { align-items: flex-end; }
+
+.agx-bubble {
+  max-width: 85%;
+  border-radius: 1rem;
+  padding: .625rem 1rem;
+  font-size: .875rem;
+  line-height: 1.625;
+  overflow-wrap: anywhere;
+}
+
+.agx-msg-user .agx-bubble {
+  background: var(--agx-teal-500);
+  color: #fff;
+  border-bottom-right-radius: .375rem;
+}
+
+.agx-msg-assistant .agx-bubble {
+  background: var(--agx-slate-100);
+  border: 1px solid var(--agx-slate-200);
+  color: var(--agx-slate-900);
+  border-bottom-left-radius: .375rem;
+}
+
+.agx-time {
+  font-size: 10px;
+  color: var(--agx-slate-400);
+  margin-top: .25rem;
+  padding: 0 .25rem;
+}
+
+/* --------------------------------------------------- markdown ("prose") --- */
+
+.agx-prose { max-width: none; }
+.agx-prose > :first-child { margin-top: 0; }
+.agx-prose > :last-child  { margin-bottom: 0; }
+
+.agx-prose p,
+.agx-prose ul,
+.agx-prose ol { margin: .25rem 0; }
+
+.agx-prose ul,
+.agx-prose ol { padding-left: 1.35em; }
+
+.agx-prose ul { list-style: disc; }
+.agx-prose ol { list-style: decimal; }
+.agx-prose li { margin: .125rem 0; }
+.agx-prose li > ul,
+.agx-prose li > ol { margin: .125rem 0; }
+
+.agx-prose a {
+  color: var(--agx-teal-600);
+  text-decoration: underline;
+}
+
+.agx-prose strong { font-weight: 600; }
+.agx-prose em { font-style: italic; }
+.agx-prose del { text-decoration: line-through; }
+
+.agx-prose h1,
+.agx-prose h2,
+.agx-prose h3,
+.agx-prose h4,
+.agx-prose h5,
+.agx-prose h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: .6em 0 .3em;
+}
+
+.agx-prose h1 { font-size: 1.25em; }
+.agx-prose h2 { font-size: 1.15em; }
+.agx-prose h3 { font-size: 1.05em; }
+.agx-prose h4,
+.agx-prose h5,
+.agx-prose h6 { font-size: 1em; }
+
+.agx-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .85em;
+  background: rgba(15, 23, 42, .06);
+  padding: .12em .35em;
+  border-radius: .25rem;
+}
+
+.agx-prose pre {
+  margin: .5rem 0;
+  padding: .625rem .75rem;
+  background: var(--agx-slate-900);
+  color: var(--agx-slate-100);
+  border-radius: .5rem;
+  overflow-x: auto;
+}
+
+.agx-prose pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: .82em;
+  line-height: 1.55;
+}
+
+.agx-prose blockquote {
+  margin: .5rem 0;
+  padding-left: .75rem;
+  border-left: 3px solid var(--agx-slate-300);
+  color: var(--agx-slate-600);
+}
+
+.agx-prose hr {
+  border: 0;
+  border-top: 1px solid var(--agx-slate-200);
+  margin: .75rem 0;
+}
+
+.agx-prose table {
+  border-collapse: collapse;
+  margin: .5rem 0;
+  font-size: .95em;
+  width: 100%;
+}
+
+.agx-prose th,
+.agx-prose td {
+  border: 1px solid var(--agx-slate-200);
+  padding: .25rem .5rem;
+  text-align: left;
+}
+
+.agx-prose th {
+  background: rgba(15, 23, 42, .04);
+  font-weight: 600;
+}
+
+.agx-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: .375rem;
+}
+
+.agx-prose input[type="checkbox"] {
+  margin-right: .35em;
+  vertical-align: middle;
+}
+
+.agx-prose .agx-task-list {
+  list-style: none;
+  padding-left: .25em;
+}
+
+/* -------------------------------------------------------------- typing dots */
+
+.agx-typing {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  color: var(--agx-slate-500);
+  font-size: .75rem;
+  padding-left: .25rem;
+}
+
+.agx-typing span.agx-dot {
+  width: .375rem;
+  height: .375rem;
+  background: var(--agx-teal-500);
+  border-radius: 9999px;
+}
+
+.agx-typing-note {
+  margin-left: .25rem;
+  color: var(--agx-slate-400);
+  font-style: italic;
+  transition: opacity .3s ease;
+}
+
+/* ------------------------------------------------------------------- composer */
+
+.agx-form {
+  border-top: 1px solid var(--agx-slate-200);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 1rem 1.25rem .5rem;
+}
+
+.agx-docked .agx-form { padding: .5rem .75rem .375rem; }
+
+.agx-input {
+  flex: 1 1 0%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--agx-slate-200);
+  border-radius: 9999px;
+  padding: .625rem 1rem;
+  font-size: .875rem;
+  color: var(--agx-slate-900);
+  outline: none;
+  transition: border-color .15s ease;
+}
+
+.agx-input::placeholder { color: var(--agx-slate-400); }
+.agx-input:focus { border-color: var(--agx-teal-400); }
+
+.agx-send {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: var(--agx-teal-500);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color .15s ease, opacity .15s ease;
+}
+
+.agx-send:hover:not(:disabled) { background: var(--agx-teal-400); }
+.agx-send:disabled { opacity: .4; cursor: default; }
+
+.agx-disclaimer {
+  padding: 0 1.25rem .5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.agx-disclaimer p {
+  margin: 0;
+  font-size: 10px;
+  color: var(--agx-slate-400);
+  line-height: 1.625;
+}
+
+.agx-disclaimer a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.agx-disclaimer a:hover { color: var(--agx-slate-600); }
+
+/* ----------------------------------------------------------- resize handles */
+
+.agx-resize {
+  position: absolute;
+  z-index: 30;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.agx-resize-n  { top: 0; left: .5rem; right: .5rem; height: .5rem; cursor: ns-resize; }
+.agx-resize-s  { bottom: 0; left: .5rem; right: .5rem; height: .5rem; cursor: ns-resize; }
+.agx-resize-w  { left: 0; top: .5rem; bottom: .5rem; width: .5rem; cursor: ew-resize; }
+.agx-resize-e  { right: 0; top: .5rem; bottom: .5rem; width: .5rem; cursor: ew-resize; }
+.agx-resize-nw { top: 0; left: 0; width: 1rem; height: 1rem; cursor: nwse-resize; }
+.agx-resize-ne { top: 0; right: 0; width: 1rem; height: 1rem; cursor: nesw-resize; }
+.agx-resize-sw { bottom: 0; left: 0; width: 1rem; height: 1rem; cursor: nesw-resize; }
+
+.agx-resize-se {
+  bottom: 0;
+  right: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: nwse-resize;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: .25rem;
+  color: var(--agx-slate-400);
+}
+
+/* --------------------------------------------------------------- utilities */
+
+.agx-hidden { display: none !important; }
+
+/* Applied to <html> while the modal is open so the host page can't scroll
+   or be interacted with behind the backdrop. */
+html.agx-scroll-lock {
+  overflow: hidden !important;
+  height: 100%;
+}
+
+html.agx-scroll-lock body {
+  overflow: hidden !important;
+}
+
+/* --------------------------------------------------------- small screens */
+
+@media (max-width: 767px) {
+  .agx-root {
+    --agx-top-offset: 64px;
+    --agx-side-inset: 3vw;
+    --agx-bottom-inset: 2vh;
+  }
+
+  .agx-launcher {
+    bottom: 1rem;
+    right: 1rem;
+    padding-right: 1.25rem;
+  }
+
+  .agx-launcher-label { font-size: .875rem; }
+}
+
+/* =========================================================================
+   HOST-PAGE HARDENING
+   This widget is embedded in third-party sites (Webflow, WordPress, etc.)
+   whose global CSS can outrank ordinary class selectors. The rules below are
+   ID-scoped and marked !important so the structural essentials — opaque
+   surfaces, the dark pill, and navbar clearance — cannot be overridden.
+   Everything else stays themeable through the custom properties above.
+   ========================================================================= */
+
+#agilisium-chat-widget .agx-panel {
+  background: #ffffff !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+#agilisium-chat-widget .agx-stage {
+  background: #ffffff !important;
+  opacity: 1 !important;
+}
+
+#agilisium-chat-widget .agx-chat {
+  background: var(--agx-slate-50, #f8fafc) !important;
+  opacity: 1 !important;
+}
+
+#agilisium-chat-widget .agx-chat-header,
+#agilisium-chat-widget .agx-form,
+#agilisium-chat-widget .agx-disclaimer,
+#agilisium-chat-widget .agx-messages {
+  background: transparent !important;
+}
+
+#agilisium-chat-widget .agx-backdrop {
+  background: rgba(15, 23, 42, .45) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+#agilisium-chat-widget .agx-panel.agx-expanded {
+  top: var(--agx-top-offset, 96px) !important;
+  bottom: var(--agx-bottom-inset, 3vh) !important;
+}
+
+#agilisium-chat-widget .agx-launcher {
+  background: var(--agx-launcher-bg, #000000) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+#agilisium-chat-widget .agx-launcher:hover {
+  background: var(--agx-launcher-bg-hover, #1a1a1a) !important;
+}
+
+/* The host site's own text must never sit on top of the widget. */
+#agilisium-chat-widget .agx-overlay { z-index: 2147483000 !important; }
+#agilisium-chat-widget .agx-launcher { z-index: 2147482999 !important; }
+
+#agilisium-chat-widget .agx-messages { touch-action: pan-y !important; }
