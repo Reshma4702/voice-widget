@@ -21,6 +21,9 @@
   var EMAIL_STORAGE_KEY = "agilisium_chat_email";
   var MOBILE_BREAKPOINT = 768;
 
+  /* Painted inline only if the stylesheet fails to give the pill a colour. */
+  var LAUNCHER_FALLBACK_BG = "#000000";
+
   var PROMPTS = [
     "Tell me about Agilisium",
     "What services do you provide?",
@@ -2648,6 +2651,40 @@
       }
     }
 
+    /**
+     * Last-resort guard for the launcher pill. It should always be dark with
+     * white text. If the stylesheet is missing, loaded late, or beaten by an
+     * !important rule on the host page, the pill can end up transparent (reads
+     * as white on a light page) or forced light — either way the white label
+     * becomes invisible. Detect that and repaint it inline with !important.
+     */
+    function enforceLauncherBackground() {
+      if (!dom.launcher) return;
+      try {
+        var bg = window.getComputedStyle(dom.launcher).backgroundColor;
+        var m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)/.exec(
+          bg || ""
+        );
+
+        var needsFix;
+        if (!m) {
+          /* no parseable colour at all (transparent, empty, or a keyword) */
+          needsFix = !bg || bg === "transparent";
+        } else {
+          var r = +m[1], g = +m[2], b = +m[3];
+          var alpha = m[4] === undefined ? 1 : +m[4];
+          /* perceived brightness, 0 (black) .. 255 (white) */
+          var luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+          needsFix = alpha < 0.5 || luminance > 140;
+        }
+
+        if (needsFix) {
+          dom.launcher.style.setProperty("background", LAUNCHER_FALLBACK_BG, "important");
+          dom.launcher.style.setProperty("color", "#fff", "important");
+        }
+      } catch (e) {}
+    }
+
     /* ====================================================================
        Global listeners
        ==================================================================== */
@@ -2672,8 +2709,13 @@
        ==================================================================== */
 
     buildDom();
+    enforceLauncherBackground();
     ensureAudio();
     attachGlobals();
+
+    /* re-check once stylesheets have settled */
+    requestAnimationFrame(enforceLauncherBackground);
+    window.addEventListener("load", enforceLauncherBackground);
 
     /* keep the scroll pinned after every render */
     var baseRender = render;
